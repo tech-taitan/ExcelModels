@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Budget 2026-27 CGT Regime Calculator</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18212f;
+      --muted: #647184;
+      --line: #d6dee8;
+      --soft: #f4f7fb;
+      --panel: #ffffff;
+      --navy: #18324d;
+      --teal: #247b79;
+      --amber: #b7791f;
+      --green: #127346;
+      --red: #b42318;
+      --blue: #1d4ed8;
+      --focus: #0f766e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: #eef3f7;
+    }
+
+    header {
+      background: var(--navy);
+      color: #fff;
+      padding: 18px 22px;
+      border-bottom: 4px solid var(--teal);
+    }
+
+    header h1 {
+      margin: 0 0 5px;
+      font-size: 22px;
+      letter-spacing: 0;
+      line-height: 1.2;
+    }
+
+    header p {
+      margin: 0;
+      color: #d9e6ef;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    main {
+      width: min(1560px, calc(100vw - 28px));
+      margin: 14px auto 28px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 12px;
+      overflow-x: auto;
+    }
+
+    .tab-button {
+      appearance: none;
+      border: 1px solid var(--line);
+      border-bottom: 0;
+      background: #fff;
+      color: var(--ink);
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      min-width: 110px;
+    }
+
+    .tab-button[aria-selected="true"] {
+      background: var(--teal);
+      color: #fff;
+      border-color: var(--teal);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(320px, 390px) minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .panel h2,
+    .panel h3 {
+      margin: 0;
+      padding: 11px 13px;
+      background: var(--navy);
+      color: #fff;
+      font-size: 15px;
+      line-height: 1.25;
+    }
+
+    .panel h3 { background: var(--teal); }
+
+    .panel-body { padding: 13px; }
+
+    .assumptions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    input,
+    select {
+      width: 100%;
+      border: 1px solid #b8c4d3;
+      border-radius: 4px;
+      padding: 8px 9px;
+      font-size: 14px;
+      color: var(--ink);
+      background: #fff;
+      min-height: 36px;
+    }
+
+    input:focus,
+    select:focus,
+    button:focus {
+      outline: 2px solid var(--focus);
+      outline-offset: 1px;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button.action {
+      border: 1px solid var(--teal);
+      background: var(--teal);
+      color: #fff;
+      border-radius: 4px;
+      padding: 9px 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      border-color: #b8c4d3;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    button.danger {
+      border-color: #d8aaa5;
+      background: #fff;
+      color: var(--red);
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .kpi {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      min-height: 84px;
+    }
+
+    .kpi .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .kpi .value {
+      font-size: 21px;
+      font-weight: 800;
+      line-height: 1.15;
+    }
+
+    .positive { color: var(--red); }
+    .negative { color: var(--green); }
+    .neutral { color: var(--ink); }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      padding: 8px;
+      text-align: left;
+      vertical-align: middle;
+      font-size: 12px;
+    }
+
+    th {
+      background: var(--navy);
+      color: #fff;
+      font-weight: 800;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    td input,
+    td select {
+      min-width: 110px;
+      font-size: 12px;
+      padding: 6px;
+      min-height: 31px;
+    }
+
+    td .wide { min-width: 180px; }
+    td .date { min-width: 132px; }
+    td .money { min-width: 120px; }
+    td .small { min-width: 84px; }
+
+    .summary-table td:first-child {
+      font-weight: 700;
+      background: var(--soft);
+      width: 260px;
+    }
+
+    .note {
+      margin: 12px 0 0;
+      padding: 10px 12px;
+      border-left: 4px solid var(--amber);
+      background: #fff8e8;
+      color: #5b430e;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .method-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .method-list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--ink);
+      line-height: 1.55;
+      font-size: 13px;
+    }
+
+    @media (max-width: 980px) {
+      main { width: min(100vw - 16px, 980px); }
+      .grid { grid-template-columns: 1fr; }
+      .kpis { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+      header { padding: 16px; }
+    }
+
+    @media (max-width: 560px) {
+      .kpis { grid-template-columns: 1fr; }
+      .tab-button { min-width: 92px; padding: 9px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Budget 2026-27 CGT Regime Calculator</h1>
+    <p>Compares current 50% CGT discount treatment with the Budget Paper No. 2 proposal for indexation, transitional gains and a 30% minimum tax.</p>
+  </header>
+
+  <main>
+    <nav class="tabs" aria-label="Calculator sections">
+      <button class="tab-button" type="button" data-tab="inputs" aria-selected="true">Inputs</button>
+      <button class="tab-button" type="button" data-tab="results" aria-selected="false">Calculator</button>
+      <button class="tab-button" type="button" data-tab="taxpayers" aria-selected="false">Taxpayer Types</button>
+      <button class="tab-button" type="button" data-tab="method" aria-selected="false">Static Data</button>
+    </nav>
+
+    <section id="inputs" class="tab-panel active">
+      <div class="grid">
+        <aside class="panel">
+          <h2>Global Assumptions</h2>
+          <div class="panel-body">
+            <div class="assumptions">
+              <label>Taxpayer type
+                <select id="taxpayerType"></select>
+              </label>
+              <label>Marginal tax rate
+                <input id="marginalRate" type="number" step="0.001" min="0" max="1">
+              </label>
+              <label>Medicare / other levy
+                <input id="levyRate" type="number" step="0.001" min="0" max="1">
+              </label>
+              <label>Current CGT discount
+                <input id="currentDiscount" type="number" step="0.001" min="0" max="1">
+              </label>
+              <label>Budget minimum tax
+                <input id="minimumTax" type="number" step="0.001" min="0" max="1">
+              </label>
+              <label>Default annual CPI / indexation
+                <input id="defaultCpi" type="number" step="0.001" min="-0.5" max="1">
+              </label>
+              <label>Reform commencement date
+                <input id="reformDate" type="date">
+              </label>
+              <label>Capital losses available
+                <input id="capitalLosses" type="number" step="1000" min="0">
+              </label>
+            </div>
+            <div class="button-row">
+              <button class="action" type="button" id="addAsset">Add Asset</button>
+              <button class="action secondary" type="button" id="resetExample">Reset Example</button>
+            </div>
+          </div>
+        </aside>
+
+        <section class="panel">
+          <h2>Asset Inputs</h2>
+          <div class="panel-body">
+            <div class="table-wrap">
+              <table id="assetTable">
+                <thead>
+                  <tr>
+                    <th>Asset</th>
+                    <th>Type</th>
+                    <th>Pre-1985</th>
+                    <th>New residential</th>
+                    <th>Income support</th>
+                    <th>Acquired</th>
+                    <th>Sold</th>
+                    <th>Sale proceeds</th>
+                    <th>Cost base</th>
+                    <th>Acq costs</th>
+                    <th>Improvements</th>
+                    <th>Sale costs</th>
+                    <th>1 Jul 2027 value</th>
+                    <th>Manual index factor</th>
+                    <th>CPI override</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <p class="note">If the 1 July 2027 value is blank, the calculator apportions gains by days held before and after the reform date. This is a simplified planning model, not tax advice.</p>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="results" class="tab-panel">
+      <div class="kpis">
+        <div class="kpi">
+          <div class="label">Current Regime Tax</div>
+          <div class="value" id="kpiCurrentTax">$0</div>
+        </div>
+        <div class="kpi">
+          <div class="label">New Regime Tax</div>
+          <div class="value" id="kpiNewTax">$0</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Difference</div>
+          <div class="value" id="kpiDifference">$0</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Effective New Tax Rate</div>
+          <div class="value" id="kpiEffectiveRate">0.0%</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <section class="panel">
+          <h2>Portfolio Summary</h2>
+          <div class="panel-body">
+            <div class="table-wrap">
+              <table class="summary-table">
+                <tbody id="summaryBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Asset Calculations</h2>
+          <div class="panel-body">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Asset</th>
+                    <th>Gross gain</th>
+                    <th>Current taxable gain</th>
+                    <th>Current tax</th>
+                    <th>Pre-reform gain</th>
+                    <th>Post-reform gain</th>
+                    <th>Index factor</th>
+                    <th>Indexed gain</th>
+                    <th>Minimum tax base</th>
+                    <th>New tax</th>
+                    <th>Tax difference</th>
+                    <th>Transition</th>
+                  </tr>
+                </thead>
+                <tbody id="calcRows"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="taxpayers" class="tab-panel">
+      <section class="panel">
+        <h2>Taxpayer Type Comparison</h2>
+        <div class="panel-body">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Taxpayer type</th>
+                  <th>Combined rate</th>
+                  <th>Minimum tax applies</th>
+                  <th>Current tax</th>
+                  <th>New standard tax</th>
+                  <th>Minimum tax amount</th>
+                  <th>New regime tax</th>
+                  <th>Difference</th>
+                  <th>Comment</th>
+                </tr>
+              </thead>
+              <tbody id="taxpayerRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section id="method" class="tab-panel">
+      <div class="method-grid">
+        <section class="panel">
+          <h2>Budget Settings</h2>
+          <div class="panel-body">
+            <ul class="method-list">
+              <li>Current regime applies a 50% CGT discount to eligible assets held more than 12 months.</li>
+              <li>From 1 July 2027, the Budget proposal replaces the 50% discount with cost base indexation for post-reform gains.</li>
+              <li>The new regime includes a 30% minimum tax on net capital gains, unless the taxpayer type is exempt.</li>
+              <li>Pre-1985 assets keep pre-reform gains outside the modelled CGT base, but post-reform gains are included.</li>
+              <li>New residential property investors are modelled with the lower of discount treatment and indexation/minimum-tax treatment.</li>
+            </ul>
+          </div>
+        </section>
+        <section class="panel">
+          <h2>Scope</h2>
+          <div class="panel-body">
+            <ul class="method-list">
+              <li>Foreign resident CGT rules are not modelled.</li>
+              <li>Company taxpayers, superannuation funds and detailed trust streaming are not modelled.</li>
+              <li>Main residence exemptions and small business CGT concessions are not modelled.</li>
+              <li>Capital losses are applied at portfolio level in both regimes.</li>
+              <li>All amounts are estimates for comparison and planning only.</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const taxpayerProfiles = [
+      { id: "residentLow", name: "Resident individual - low bracket", marginal: 0.19, levy: 0.02, minTax: true, special: "standard", comment: "Minimum tax may bind where marginal rate is below 30%." },
+      { id: "residentMiddle", name: "Resident individual - middle bracket", marginal: 0.325, levy: 0.02, minTax: true, special: "standard", comment: "Illustrative mid-rate taxpayer." },
+      { id: "residentTop", name: "Resident individual - top bracket", marginal: 0.45, levy: 0.02, minTax: true, special: "standard", comment: "Broad proxy for high-income resident individual." },
+      { id: "incomeSupport", name: "Income support / Age Pension recipient", marginal: 0.19, levy: 0.02, minTax: false, special: "standard", comment: "Exempt from the 30% minimum tax in this model." },
+      { id: "newResidential", name: "New residential property investor", marginal: 0.45, levy: 0.02, minTax: true, special: "bestOf", comment: "Uses lower of discount or indexation/minimum-tax treatment." },
+      { id: "trustBeneficiary", name: "Discretionary trust beneficiary proxy", marginal: 0.45, levy: 0.02, minTax: true, special: "standard", comment: "Simplified proxy only, not trust streaming." },
+      { id: "partnershipPartner", name: "Partnership individual partner proxy", marginal: 0.325, levy: 0.02, minTax: true, special: "standard", comment: "Applies partner rate to attributed gain." },
+      { id: "foreignResident", name: "Foreign resident investor", marginal: 0.325, levy: 0, minTax: false, special: "outOfScope", comment: "Foreign-resident CGT is separate and not modelled." }
+    ];
+
+    const state = {
+      taxpayerType: "residentTop",
+      marginalRate: 0.45,
+      levyRate: 0.02,
+      currentDiscount: 0.5,
+      minimumTax: 0.3,
+      defaultCpi: 0.025,
+      reformDate: "2027-07-01",
+      capitalLosses: 0,
+      assets: []
+    };
+
+    const examples = [
+      {
+        name: "Investment property example",
+        type: "Residential property",
+        pre1985: "No",
+        newResidential: "No",
+        incomeSupport: "No",
+        acquired: "2018-07-01",
+        sold: "2030-06-30",
+        saleProceeds: 1250000,
+        costBase: 760000,
+        acqCosts: 35000,
+        improvements: 40000,
+        saleCosts: 25000,
+        reformValue: 1100000,
+        manualIndex: "",
+        cpiOverride: ""
+      },
+      {
+        name: "Share portfolio example",
+        type: "Listed shares",
+        pre1985: "No",
+        newResidential: "No",
+        incomeSupport: "No",
+        acquired: "2021-03-15",
+        sold: "2029-06-30",
+        saleProceeds: 310000,
+        costBase: 180000,
+        acqCosts: 2500,
+        improvements: 0,
+        saleCosts: 1200,
+        reformValue: "",
+        manualIndex: "",
+        cpiOverride: ""
+      },
+      {
+        name: "Pre-CGT asset example",
+        type: "Other asset",
+        pre1985: "Yes",
+        newResidential: "No",
+        incomeSupport: "No",
+        acquired: "1984-01-01",
+        sold: "2031-06-30",
+        saleProceeds: 900000,
+        costBase: 120000,
+        acqCosts: 5000,
+        improvements: 20000,
+        saleCosts: 15000,
+        reformValue: 700000,
+        manualIndex: "",
+        cpiOverride: ""
+      }
+    ];
+
+    const moneyFmt = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD", maximumFractionDigits: 0 });
+    const pctFmt = new Intl.NumberFormat("en-AU", { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+    function $(id) { return document.getElementById(id); }
+    function num(value) { return Number(value || 0); }
+    function yes(value) { return value === "Yes"; }
+    function dateValue(value) { return value ? new Date(value + "T00:00:00") : null; }
+    function daysBetween(a, b) { return Math.max(0, (b - a) / 86400000); }
+    function formatMoney(value) { return Number.isFinite(value) ? moneyFmt.format(value) : "Not modelled"; }
+    function formatPct(value) { return Number.isFinite(value) ? pctFmt.format(value) : "Not modelled"; }
+
+    function getProfile(id) {
+      return taxpayerProfiles.find(profile => profile.id === id) || taxpayerProfiles[0];
+    }
+
+    function blankAsset() {
+      return {
+        name: "",
+        type: "Residential property",
+        pre1985: "No",
+        newResidential: "No",
+        incomeSupport: "No",
+        acquired: "",
+        sold: "",
+        saleProceeds: "",
+        costBase: "",
+        acqCosts: "",
+        improvements: "",
+        saleCosts: "",
+        reformValue: "",
+        manualIndex: "",
+        cpiOverride: ""
+      };
+    }
+
+    function resetExamples() {
+      state.assets = JSON.parse(JSON.stringify(examples));
+      syncControls();
+      renderAssetRows();
+      calculate();
+    }
+
+    function syncControls() {
+      $("taxpayerType").value = state.taxpayerType;
+      $("marginalRate").value = state.marginalRate;
+      $("levyRate").value = state.levyRate;
+      $("currentDiscount").value = state.currentDiscount;
+      $("minimumTax").value = state.minimumTax;
+      $("defaultCpi").value = state.defaultCpi;
+      $("reformDate").value = state.reformDate;
+      $("capitalLosses").value = state.capitalLosses;
+    }
+
+    function readControls() {
+      state.taxpayerType = $("taxpayerType").value;
+      state.marginalRate = num($("marginalRate").value);
+      state.levyRate = num($("levyRate").value);
+      state.currentDiscount = num($("currentDiscount").value);
+      state.minimumTax = num($("minimumTax").value);
+      state.defaultCpi = num($("defaultCpi").value);
+      state.reformDate = $("reformDate").value;
+      state.capitalLosses = num($("capitalLosses").value);
+    }
+
+    function assetCalc(asset, profile) {
+      const acquired = dateValue(asset.acquired);
+      const sold = dateValue(asset.sold);
+      const reform = dateValue(state.reformDate);
+      const totalCost = num(asset.costBase) + num(asset.acqCosts) + num(asset.improvements);
+      const netSale = Math.max(0, num(asset.saleProceeds) - num(asset.saleCosts));
+      const grossGain = Math.max(0, netSale - totalCost);
+
+      if (!acquired || !sold || !reform || !asset.name) {
+        return emptyCalc(asset);
+      }
+
+      const eligibleDiscount = daysBetween(acquired, sold) > 365;
+      const discount = eligibleDiscount ? state.currentDiscount : 0;
+      const currentTaxable = yes(asset.pre1985) ? 0 : grossGain * (1 - discount);
+
+      let preGain = 0;
+      let transitionMethod = "Time apportionment";
+      if (sold <= reform) {
+        preGain = grossGain;
+        transitionMethod = "Sold before reform";
+      } else if (acquired >= reform) {
+        preGain = 0;
+        transitionMethod = "Acquired after reform";
+      } else if (asset.reformValue !== "" && asset.reformValue !== null) {
+        preGain = Math.max(0, num(asset.reformValue) - totalCost);
+        transitionMethod = "1 Jul 2027 value";
+      } else {
+        const heldDays = Math.max(1, daysBetween(acquired, sold));
+        preGain = grossGain * Math.max(0, daysBetween(acquired, reform)) / heldDays;
+      }
+      preGain = Math.min(grossGain, preGain);
+      const postGain = Math.max(0, grossGain - preGain);
+
+      const postStart = acquired >= reform ? totalCost : (asset.reformValue !== "" && asset.reformValue !== null ? num(asset.reformValue) : totalCost + preGain);
+      const indexYears = Math.max(0, daysBetween(acquired > reform ? acquired : reform, sold)) / 365;
+      const cpi = asset.cpiOverride !== "" && asset.cpiOverride !== null ? num(asset.cpiOverride) : state.defaultCpi;
+      const indexFactor = asset.manualIndex !== "" && asset.manualIndex !== null ? num(asset.manualIndex) : Math.pow(1 + cpi, indexYears);
+      const indexAllowance = Math.max(0, postStart * (indexFactor - 1));
+      const postIndexedGain = Math.max(0, postGain - indexAllowance);
+
+      const preTaxableNew = yes(asset.pre1985) ? 0 : preGain * (1 - discount);
+      const newTaxable = yes(asset.pre1985) ? postIndexedGain : preTaxableNew + postIndexedGain;
+      const minBase = postGain;
+
+      return {
+        asset,
+        grossGain,
+        currentTaxable,
+        preGain,
+        postGain,
+        indexFactor,
+        indexAllowance,
+        postIndexedGain,
+        minBase,
+        newTaxable,
+        transitionMethod
+      };
+    }
+
+    function emptyCalc(asset) {
+      return {
+        asset,
+        grossGain: 0,
+        currentTaxable: 0,
+        preGain: 0,
+        postGain: 0,
+        indexFactor: 1,
+        indexAllowance: 0,
+        postIndexedGain: 0,
+        minBase: 0,
+        newTaxable: 0,
+        transitionMethod: ""
+      };
+    }
+
+    function portfolioFor(profile) {
+      const rows = state.assets.map(asset => assetCalc(asset, profile));
+      const grossGain = rows.reduce((sum, row) => sum + row.grossGain, 0);
+      const currentTaxableBeforeLosses = rows.reduce((sum, row) => sum + row.currentTaxable, 0);
+      const newTaxableBeforeLosses = rows.reduce((sum, row) => sum + row.newTaxable, 0);
+      const minBaseBeforeLosses = rows.reduce((sum, row) => sum + row.minBase, 0);
+      const losses = Math.max(0, state.capitalLosses);
+      const currentTaxable = Math.max(0, currentTaxableBeforeLosses - Math.min(losses, currentTaxableBeforeLosses));
+      const newTaxable = Math.max(0, newTaxableBeforeLosses - Math.min(losses, newTaxableBeforeLosses));
+      const minBase = Math.max(0, minBaseBeforeLosses - Math.min(losses, minBaseBeforeLosses));
+      const rate = profile.marginal + profile.levy;
+      const currentTax = profile.special === "outOfScope" ? NaN : currentTaxable * rate;
+      const newStandardTax = profile.special === "outOfScope" ? NaN : newTaxable * rate;
+      const minimumTaxAmount = profile.minTax ? minBase * state.minimumTax : 0;
+      let newTax = Math.max(newStandardTax, minimumTaxAmount);
+      if (profile.special === "bestOf") {
+        newTax = Math.min(currentTax, newTax);
+      }
+      if (profile.special === "outOfScope") {
+        newTax = NaN;
+      }
+      return {
+        rows,
+        grossGain,
+        currentTaxableBeforeLosses,
+        newTaxableBeforeLosses,
+        minBaseBeforeLosses,
+        currentTaxable,
+        newTaxable,
+        minBase,
+        currentTax,
+        newStandardTax,
+        minimumTaxAmount,
+        newTax,
+        difference: newTax - currentTax,
+        effectiveNewRate: grossGain > 0 ? newTax / grossGain : 0
+      };
+    }
+
+    function renderAssetRows() {
+      const tbody = document.querySelector("#assetTable tbody");
+      tbody.innerHTML = "";
+      state.assets.forEach((asset, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><input class="wide" data-field="name" value="${escapeHtml(asset.name)}"></td>
+          <td><select data-field="type">
+            ${["Residential property", "Listed shares", "Managed fund", "Business asset", "Other asset"].map(option => `<option ${asset.type === option ? "selected" : ""}>${option}</option>`).join("")}
+          </select></td>
+          <td>${yesNoSelect(asset.pre1985, "pre1985")}</td>
+          <td>${yesNoSelect(asset.newResidential, "newResidential")}</td>
+          <td>${yesNoSelect(asset.incomeSupport, "incomeSupport")}</td>
+          <td><input class="date" type="date" data-field="acquired" value="${asset.acquired || ""}"></td>
+          <td><input class="date" type="date" data-field="sold" value="${asset.sold || ""}"></td>
+          <td><input class="money" type="number" step="1000" data-field="saleProceeds" value="${asset.saleProceeds}"></td>
+          <td><input class="money" type="number" step="1000" data-field="costBase" value="${asset.costBase}"></td>
+          <td><input class="money" type="number" step="1000" data-field="acqCosts" value="${asset.acqCosts}"></td>
+          <td><input class="money" type="number" step="1000" data-field="improvements" value="${asset.improvements}"></td>
+          <td><input class="money" type="number" step="1000" data-field="saleCosts" value="${asset.saleCosts}"></td>
+          <td><input class="money" type="number" step="1000" data-field="reformValue" value="${asset.reformValue}"></td>
+          <td><input class="small" type="number" step="0.001" data-field="manualIndex" value="${asset.manualIndex}"></td>
+          <td><input class="small" type="number" step="0.001" data-field="cpiOverride" value="${asset.cpiOverride}"></td>
+          <td><button class="action danger" type="button" data-remove="${index}">Remove</button></td>
+        `;
+        tr.querySelectorAll("input, select").forEach(input => {
+          input.addEventListener("input", event => {
+            state.assets[index][event.target.dataset.field] = event.target.value;
+            calculate();
+          });
+        });
+        tr.querySelector("[data-remove]").addEventListener("click", () => {
+          state.assets.splice(index, 1);
+          renderAssetRows();
+          calculate();
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    function yesNoSelect(value, field) {
+      return `<select data-field="${field}"><option ${value === "No" ? "selected" : ""}>No</option><option ${value === "Yes" ? "selected" : ""}>Yes</option></select>`;
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+    }
+
+    function renderSummary(result) {
+      const rows = [
+        ["Gross nominal capital gains", formatMoney(result.grossGain), formatMoney(result.grossGain), formatMoney(0)],
+        ["Taxable capital gains before losses", formatMoney(result.currentTaxableBeforeLosses), formatMoney(result.newTaxableBeforeLosses), formatMoney(result.newTaxableBeforeLosses - result.currentTaxableBeforeLosses)],
+        ["Capital losses applied", formatMoney(Math.min(state.capitalLosses, result.currentTaxableBeforeLosses)), formatMoney(Math.min(state.capitalLosses, result.newTaxableBeforeLosses)), ""],
+        ["Net taxable capital gains", formatMoney(result.currentTaxable), formatMoney(result.newTaxable), formatMoney(result.newTaxable - result.currentTaxable)],
+        ["Estimated CGT tax", formatMoney(result.currentTax), formatMoney(result.newTax), formatMoney(result.difference)],
+        ["Effective tax rate on gross gains", formatPct(result.grossGain > 0 ? result.currentTax / result.grossGain : 0), formatPct(result.effectiveNewRate), formatPct(result.effectiveNewRate - (result.grossGain > 0 ? result.currentTax / result.grossGain : 0))]
+      ];
+      $("summaryBody").innerHTML = rows.map(row => `
+        <tr>
+          <td>${row[0]}</td>
+          <td>${row[1]}</td>
+          <td>${row[2]}</td>
+          <td class="${classForMoney(row[3])}">${row[3]}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderCalculationRows(result, profile) {
+      const rate = profile.marginal + profile.levy;
+      $("calcRows").innerHTML = result.rows.map(row => {
+        const currentTax = row.currentTaxable * rate;
+        const newStandard = row.newTaxable * rate;
+        const minTax = profile.minTax ? row.minBase * state.minimumTax : 0;
+        let newTax = Math.max(newStandard, minTax);
+        if (profile.special === "bestOf" || yes(row.asset.newResidential)) {
+          newTax = Math.min(currentTax, newTax);
+        }
+        const difference = newTax - currentTax;
+        return `
+          <tr>
+            <td>${escapeHtml(row.asset.name)}</td>
+            <td>${formatMoney(row.grossGain)}</td>
+            <td>${formatMoney(row.currentTaxable)}</td>
+            <td>${formatMoney(currentTax)}</td>
+            <td>${formatMoney(row.preGain)}</td>
+            <td>${formatMoney(row.postGain)}</td>
+            <td>${row.indexFactor.toFixed(3)}x</td>
+            <td>${formatMoney(row.postIndexedGain)}</td>
+            <td>${formatMoney(row.minBase)}</td>
+            <td>${formatMoney(newTax)}</td>
+            <td class="${difference > 0 ? "positive" : difference < 0 ? "negative" : "neutral"}">${formatMoney(difference)}</td>
+            <td>${row.transitionMethod}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderTaxpayerRows() {
+      $("taxpayerRows").innerHTML = taxpayerProfiles.map(profile => {
+        const result = portfolioFor(profile);
+        return `
+          <tr>
+            <td>${profile.name}</td>
+            <td>${formatPct(profile.marginal + profile.levy)}</td>
+            <td>${profile.minTax ? "Yes" : "No"}</td>
+            <td>${formatMoney(result.currentTax)}</td>
+            <td>${formatMoney(result.newStandardTax)}</td>
+            <td>${formatMoney(result.minimumTaxAmount)}</td>
+            <td>${formatMoney(result.newTax)}</td>
+            <td class="${result.difference > 0 ? "positive" : result.difference < 0 ? "negative" : "neutral"}">${formatMoney(result.difference)}</td>
+            <td>${profile.comment}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function classForMoney(value) {
+      if (typeof value !== "string") return "neutral";
+      if (value.includes("(") || value.startsWith("-")) return "negative";
+      if (value !== "$0" && value !== "") return "positive";
+      return "neutral";
+    }
+
+    function calculate() {
+      readControls();
+      const selected = getProfile(state.taxpayerType);
+      selected.marginal = state.marginalRate;
+      selected.levy = state.levyRate;
+      if (state.taxpayerType === "incomeSupport") selected.minTax = false;
+      const result = portfolioFor(selected);
+      $("kpiCurrentTax").textContent = formatMoney(result.currentTax);
+      $("kpiNewTax").textContent = formatMoney(result.newTax);
+      $("kpiDifference").textContent = formatMoney(result.difference);
+      $("kpiDifference").className = `value ${result.difference > 0 ? "positive" : result.difference < 0 ? "negative" : "neutral"}`;
+      $("kpiEffectiveRate").textContent = formatPct(result.effectiveNewRate);
+      renderSummary(result);
+      renderCalculationRows(result, selected);
+      renderTaxpayerRows();
+    }
+
+    function initialise() {
+      const taxpayerSelect = $("taxpayerType");
+      taxpayerProfiles.forEach(profile => {
+        const option = document.createElement("option");
+        option.value = profile.id;
+        option.textContent = profile.name;
+        taxpayerSelect.appendChild(option);
+      });
+
+      taxpayerSelect.addEventListener("change", () => {
+        const profile = getProfile(taxpayerSelect.value);
+        state.taxpayerType = profile.id;
+        state.marginalRate = profile.marginal;
+        state.levyRate = profile.levy;
+        syncControls();
+        calculate();
+      });
+
+      ["marginalRate", "levyRate", "currentDiscount", "minimumTax", "defaultCpi", "reformDate", "capitalLosses"].forEach(id => {
+        $(id).addEventListener("input", calculate);
+      });
+
+      $("addAsset").addEventListener("click", () => {
+        state.assets.push(blankAsset());
+        renderAssetRows();
+        calculate();
+      });
+
+      $("resetExample").addEventListener("click", resetExamples);
+
+      document.querySelectorAll(".tab-button").forEach(button => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".tab-button").forEach(btn => btn.setAttribute("aria-selected", "false"));
+          document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.remove("active"));
+          button.setAttribute("aria-selected", "true");
+          $(button.dataset.tab).classList.add("active");
+        });
+      });
+
+      resetExamples();
+    }
+
+    initialise();
+  </script>
+</body>
+</html>
